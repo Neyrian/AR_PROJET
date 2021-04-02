@@ -75,7 +75,11 @@ public class HttpServer {
 		String method = parse.nextToken().toUpperCase(); 
 		String ressname = parse.nextToken();
 		if (method.equals("GET")) {
-			request = new HttpStaticRequest(this, method, ressname);
+			if(ressname.split("/")[1].equals(new String("ricmlets"))) {
+				request = new HttpRicmletRequestImpl(this, method, ressname, br);
+			} else {
+				request = new HttpStaticRequest(this, method, ressname);
+			}
 		} else 
 			request = new UnknownRequest(this, method, ressname);
 		return request;

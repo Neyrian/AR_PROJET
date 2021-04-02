@@ -16,7 +16,6 @@ public class HttpStaticRequest extends HttpRequest {
 	}
 
 	public void process(HttpResponse resp) throws Exception {
-
 		/*
 		 * Get the path of the requeted file
 		 */
@@ -28,12 +27,12 @@ public class HttpStaticRequest extends HttpRequest {
 		
 		/*
 		 * Checking if the requested path is a directory
-		 * If it is, send the index.html contained in the directory
+		 * If it is, send the DEFAULT_FILE contained in the directory
 		 * To do so, we change the variable path and open the index.html
 		 */
 		
 		if (f.isDirectory()) {
-			path = (f.getPath() + "/index.html");
+			path = (f.getPath() + "/" + DEFAULT_FILE);
 			f = new File(path);
 		}
 		
