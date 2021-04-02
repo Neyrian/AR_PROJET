@@ -3,4 +3,6 @@
 /.git/
 *.class
 .metadata
+.classpath
+.DS_Store
 
