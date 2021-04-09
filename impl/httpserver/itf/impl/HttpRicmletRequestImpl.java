@@ -3,6 +3,7 @@ package httpserver.itf.impl;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.StringTokenizer;
 
 import httpserver.itf.HttpResponse;
 import httpserver.itf.HttpRicmlet;
@@ -16,28 +17,63 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 	/*
 	 * Contains the path
 	 */
-	String m_ricmlet;
+	String m_clsname;
 
 	/*
 	 * Contains the keys of the request and their values
 	 */
 	HashMap<String, String> m_args;
 
+	HashMap<String, String> m_cookies;
+
 	public HttpRicmletRequestImpl(HttpServer hs, String method, String ressname, BufferedReader br) throws IOException {
 		super(hs, method, ressname, br);
 		m_args = new HashMap<String, String>();
+		m_cookies = new HashMap<String, String>();
+
 		m_br = br;
 
+		/*
+		 * Parsing Cookie
+		 */
+		String line;
+		StringTokenizer parse = null;
+		String name = null;
+		/*
+		 * Searching for the line containing the cookies in the request header
+		 */
+		 do {
+			line = br.readLine();
+			if (line.equals(""))
+				break; 
+			parse = new StringTokenizer(line);
+			name = parse.nextToken();
+		} while ((name != null) && (!name.equals("Cookie:")));
+		 
+		/*
+		 * Parsing all the cookies if there is a line corresponding to the cookies in the request
+		 */
+		 
+		 if (!line.equals("")) {
+			 String NextCookie;
+				while (parse.countTokens() > 0) {
+					NextCookie = parse.nextToken();
+					NextCookie.replaceAll(";", "");
+					String[] key_val_cookie = NextCookie.split("=");
+					m_cookies.put(key_val_cookie[0], key_val_cookie[1]);
+				}
+		 }
+		
 		/*
 		 * Splits ressname to separate the path and the arguments
 		 */
 		String[] tmp = ressname.split("\\?");
 
 		/*
-		 * Changing the path to the class name in order to instantiate it as a class
+		 * Changing the path to the class name in order to get the class name.
 		 */
-		m_ricmlet = tmp[0].replaceAll("/", ".");
-		m_ricmlet = m_ricmlet.substring("/ricmlets/".length());
+		m_clsname = tmp[0].replaceAll("/", ".");
+		m_clsname = m_clsname.substring(".ricmlets.".length());
 
 		if (tmp.length >= 2)
 			for (String arg : tmp[1].split("&")) {
@@ -59,18 +95,18 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 
 	@Override
 	public String getCookie(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		return m_cookies.get(name);
 	}
 
 	@Override
 	public void process(HttpResponse resp) throws Exception {
 		try {
 			/*
-			 * Instantiating the Ricmlet
+			 * Get the instance of the ricmlet from the server
 			 */
-			Class<?> c = Class.forName(m_ricmlet);
-			((HttpRicmlet) c.getDeclaredConstructor().newInstance()).doGet(this, (HttpRicmletResponse) resp);
+			HttpRicmlet ricmlet = m_hs.getInstance(m_clsname);
+			ricmlet.doGet(this, (HttpRicmletResponse) resp);
+
 		} catch (ClassNotFoundException e) {
 			resp.setReplyError(404, "Ricmlet Not Found");
 		}
