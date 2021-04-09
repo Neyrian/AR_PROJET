@@ -14,6 +14,7 @@ import java.util.StringTokenizer;
 import httpserver.itf.HttpRequest;
 import httpserver.itf.HttpResponse;
 import httpserver.itf.HttpRicmlet;
+import httpserver.itf.HttpSession;
 
 /**
  * Basic Http Server Implementation
@@ -28,15 +29,23 @@ public class HttpServer {
 	private int m_port;
 	private File m_folder;
 	private ServerSocket m_ssoc;
+	private int nb_session;
 
 	/*
 	 * Contains the instance of all RicmLet
 	 */
-	HashMap<String, HttpRicmlet> instancesRicmlet;
+	private HashMap<String, HttpRicmlet> m_instancesRicmlet;
+	
+	/*
+	 * Contains the sessions
+	 */
+	private HashMap<String, HttpSession> m_sessions;
 
 	protected HttpServer(int port, String folderName) {
-		instancesRicmlet = new HashMap<String, HttpRicmlet>();
-
+		m_instancesRicmlet = new HashMap<String, HttpRicmlet>();
+		m_sessions = new HashMap<String, HttpSession>();
+		nb_session = 0;
+		
 		m_port = port;
 		if (!folderName.endsWith(File.separator))
 			folderName = folderName + File.separator;
@@ -61,13 +70,22 @@ public class HttpServer {
 	public HttpRicmlet getInstance(String clsname)
 			throws InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		HttpRicmlet ricmlet = instancesRicmlet.get(clsname);
+		HttpRicmlet ricmlet = m_instancesRicmlet.get(clsname);
 		if (ricmlet == null) {
 			Class<?> c = Class.forName(clsname);
 			ricmlet = ((HttpRicmlet) c.getDeclaredConstructor().newInstance());
-			instancesRicmlet.put(clsname, ricmlet);
+			m_instancesRicmlet.put(clsname, ricmlet);
 		}
 		return ricmlet;
+	}
+	
+	public HttpSession getSession(String Id) {
+		HttpSession session = m_sessions.get(Id);
+		if (session == null) {
+			session = new HttpSessionImpl(Id);
+			m_sessions.put(Id, session);
+		}
+		return session;
 	}
 
 	protected void loop() {
@@ -124,6 +142,10 @@ public class HttpServer {
 			HttpServer hs = new HttpServer(port, foldername);
 			hs.loop();
 		}
+	}
+
+	public String getNextSession() {
+		return String.valueOf(nb_session++);
 	}
 
 }

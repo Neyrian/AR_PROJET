@@ -5,7 +5,7 @@ package httpserver.itf;
  * Provides a way to identify a user across more than one request and to store information about that user. 
  */
 public interface HttpSession {
-	
+	public final String COOKIE_SESSION = "session-id";
 	/*
 	 * Returns a string containing the unique identifier assigned to this session.
 	 */

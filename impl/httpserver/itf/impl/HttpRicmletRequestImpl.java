@@ -25,7 +25,7 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 	HashMap<String, String> m_args;
 
 	HashMap<String, String> m_cookies;
-
+	
 	public HttpRicmletRequestImpl(HttpServer hs, String method, String ressname, BufferedReader br) throws IOException {
 		super(hs, method, ressname, br);
 		m_args = new HashMap<String, String>();
@@ -42,28 +42,21 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 		/*
 		 * Searching for the line containing the cookies in the request header
 		 */
-		 do {
+		do {
 			line = br.readLine();
 			if (line.equals(""))
-				break; 
+				break;
 			parse = new StringTokenizer(line);
 			name = parse.nextToken();
-		} while ((name != null) && (!name.equals("Cookie:")));
-		 
-		/*
-		 * Parsing all the cookies if there is a line corresponding to the cookies in the request
-		 */
-		 
-		 if (!line.equals("")) {
-			 String NextCookie;
-				while (parse.countTokens() > 0) {
-					NextCookie = parse.nextToken();
-					NextCookie.replaceAll(";", "");
-					String[] key_val_cookie = NextCookie.split("=");
-					m_cookies.put(key_val_cookie[0], key_val_cookie[1]);
-				}
-		 }
-		
+			switch (name) {
+			case "Cookie:":
+				parseCookies(line);
+				break;
+			default:
+				break;
+			}
+		} while (name != null);
+
 		/*
 		 * Splits ressname to separate the path and the arguments
 		 */
@@ -81,11 +74,31 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 				m_args.put(key_val[0], key_val[1]);
 			}
 	}
+		
+	private void parseCookies(String line) {
+		/*
+		 * Parsing all the cookies if there is a line corresponding to the cookies in
+		 * the request
+		 */
+		StringTokenizer parse = new StringTokenizer(line);
+		parse.nextToken();
+		String NextCookie;
+		while (parse.countTokens() > 0) {
+			NextCookie = parse.nextToken();
+			NextCookie.replaceAll(";", "");
+			String[] key_val_cookie = NextCookie.split("=");
+			m_cookies.put(key_val_cookie[0], key_val_cookie[1]);
+		}
+
+	}
 
 	@Override
 	public HttpSession getSession() {
-		// TODO Auto-generated method stub
-		return null;
+		String Id = m_cookies.get(HttpSession.COOKIE_SESSION);
+		if (Id == null) {
+			m_cookies.put(HttpSession.COOKIE_SESSION, m_hs.getNextSession());
+		}
+		return m_hs.getSession(Id);
 	}
 
 	@Override
@@ -105,6 +118,9 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 			 * Get the instance of the ricmlet from the server
 			 */
 			HttpRicmlet ricmlet = m_hs.getInstance(m_clsname);
+			
+			((HttpRicmletResponse) resp).setCookie(HttpSession.COOKIE_SESSION, m_cookies.get(HttpSession.COOKIE_SESSION));
+			
 			ricmlet.doGet(this, (HttpRicmletResponse) resp);
 
 		} catch (ClassNotFoundException e) {
