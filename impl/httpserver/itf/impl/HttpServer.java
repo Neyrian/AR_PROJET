@@ -90,7 +90,10 @@ public class HttpServer {
 	 * Returns an HttpResponse object corresponding the the given HttpRequest object
 	 */
 	public HttpResponse getResponse(HttpRequest req, PrintStream ps) {
-		return new HttpResponseImpl(this, req, ps);
+		if (req instanceof HttpRicmletRequestImpl)
+			return new HttpRicmletResponseImpl(this, req, ps);
+		else 
+			return new HttpResponseImpl(this, req, ps);
 	}
 
 

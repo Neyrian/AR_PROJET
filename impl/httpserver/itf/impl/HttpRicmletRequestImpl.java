@@ -37,6 +37,7 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 		 * Changing the path to the class name in order to instantiate it as a class
 		 */
 		m_ricmlet = tmp[0].replaceAll("/", ".");
+		m_ricmlet = m_ricmlet.substring("/ricmlets/".length());
 
 		if (tmp.length >= 2)
 			for (String arg : tmp[1].split("&")) {
@@ -68,9 +69,8 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 			/*
 			 * Instantiating the Ricmlet
 			 */
-			Class<?> c = Class.forName(m_ricmlet.substring(1));
-			HttpRicmlet tmp = (HttpRicmlet) c.getDeclaredConstructor().newInstance();
-			tmp.doGet(this, (HttpRicmletResponse) resp);
+			Class<?> c = Class.forName(m_ricmlet);
+			((HttpRicmlet) c.getDeclaredConstructor().newInstance()).doGet(this, (HttpRicmletResponse) resp);
 		} catch (ClassNotFoundException e) {
 			resp.setReplyError(404, "Ricmlet Not Found");
 		}
