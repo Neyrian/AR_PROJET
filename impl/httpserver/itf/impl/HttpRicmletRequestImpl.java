@@ -119,8 +119,6 @@ public class HttpRicmletRequestImpl extends HttpRicmletRequest {
 			 */
 			HttpRicmlet ricmlet = m_hs.getInstance(m_clsname);
 			
-			((HttpRicmletResponse) resp).setCookie(HttpSession.COOKIE_SESSION, m_cookies.get(HttpSession.COOKIE_SESSION));
-			
 			ricmlet.doGet(this, (HttpRicmletResponse) resp);
 
 		} catch (ClassNotFoundException e) {

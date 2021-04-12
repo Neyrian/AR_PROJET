@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
@@ -79,13 +80,28 @@ public class HttpServer {
 		return ricmlet;
 	}
 	
+	/*
+	 * Get the session corresponding to the ID.
+	 * If no such session is already up, then a new session is created.
+	 */
 	public HttpSession getSession(String Id) {
 		HttpSession session = m_sessions.get(Id);
 		if (session == null) {
-			session = new HttpSessionImpl(Id);
+			session = new HttpSessionImpl(Id, this);
 			m_sessions.put(Id, session);
 		}
 		return session;
+	}
+	
+	public Collection<HttpSession> getAllSession() {
+		return m_sessions.values();
+	}
+	
+	public void deleteSession(String Id) {
+		System.out.println("A session is deleted");
+		HttpSessionImpl session = (HttpSessionImpl) m_sessions.get(Id);
+		session.getTimer().stop();
+		m_sessions.remove(Id);
 	}
 
 	protected void loop() {
